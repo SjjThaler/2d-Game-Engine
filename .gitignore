@@ -1,0 +1,13 @@
+# Compiled object files
+*.o
+*.obj
+*.a
+*.so
+
+# Compiled executables (C executables have no extension, so list them by name).
+# Add new binary names here as you create them — or later, build into a bin/
+# directory and ignore that whole directory instead.
+struct
+test
+main
+snake
