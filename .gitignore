@@ -11,3 +11,8 @@ struct
 test
 main
 snake
+overflow
+
+# Editor swap/backup files
+*.swp
+*~
