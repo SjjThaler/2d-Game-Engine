@@ -35,3 +35,7 @@ Compiled binaries are git-ignored (see `.gitignore`); add new binary names there
 - `struct.c` — a coordinate-system study artifact (`Point`, `add`, `distance`,
   `move`, `print_point`); kept for reference.
 - `game-engine-roadmap.md` — the (preliminary) long-term roadmap.
+- `evolution-game-roadmap.md` — plan for a pursuit-evasion game ("catch me if you
+  can") whose evader is a neural network improved by self-play evolution; a
+  concrete first game that feeds the engine roadmap. Currently at Phase A
+  (headless, deterministic game loop).

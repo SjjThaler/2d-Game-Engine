@@ -12,6 +12,7 @@ test
 main
 snake
 overflow
+pong
 
 # Editor swap/backup files
 *.swp
