@@ -5,7 +5,7 @@
 #define WIDTH 20
 #define OUTPUTS 5
 #define INPUTS 4
-#define POP_SIZE 50
+#define POP_SIZE 500
 #define SURVIVAL_LIMIT 1000
 #define GENERATIONS 1000
 
@@ -132,6 +132,19 @@ void mutate(struct brain *b) {
 	}	
 }
 
+int tournament(int fitness[]) {
+	int random_brains[3];
+	for (int brain = 0; brain < 2; brain ++) {
+		random_brains[brain] = rand() % POP_SIZE;
+	}
+	int winner = 0;
+	for (int brain = 0; brain < 2; brain ++) {
+		if (fitness[random_brains[brain]] > fitness[random_brains[winner]]) {
+			winner = random_brains[brain];
+		}
+	}
+	return winner;
+}
 int run_match(void) {
 	struct dot player = {
 		0,0,	
@@ -141,14 +154,21 @@ int run_match(void) {
 	};
 	int survival_count = 0;
 	while(survival_count < SURVIVAL_LIMIT) {
-
+		// Escapee gets one move
 		enum action opponent_choice = opponent_controller(player, opponent);
 		apply_action(&opponent, opponent_choice);		
+		// Pursuer gets 1.5 moves
 		enum action player_choice = player_controller(player, opponent);
 		apply_action(&player, player_choice);
-			
 		if (player.x == opponent.x && player.y == opponent.y) {
 			return survival_count;
+		}
+		if (survival_count % 2 != 0) {
+			player_choice = player_controller(player, opponent);
+			apply_action(&player, player_choice);
+			if (player.x == opponent.x && player.y == opponent.y) {
+				return survival_count;
+			}
 		}
 		survival_count += 1;
 	}
@@ -160,11 +180,13 @@ int main (void) {
 		srand(time(NULL));
 		struct brain population[POP_SIZE];
 		int fitness[POP_SIZE];
+
 		for (int i = 0; i < POP_SIZE; i++) {
 			fill_weights_biases(&population[i]);
 			active = population[i];
 			fitness[i] = run_match();
 		}
+
 		for(int g = 0; g < GENERATIONS; g++) {
 			for (int p = 0; p < POP_SIZE; p++) {
 				active = population[p];
@@ -185,7 +207,9 @@ int main (void) {
 			population[0] = champion;
 				
 			for (int i = 1; i < POP_SIZE; i++) {
-				struct brain mutant = champion;
+				//struct brain mutant = champion;
+				int winner = tournament(fitness);
+				struct brain mutant = population[winner];
 				mutate(&mutant);
 				population[i] = mutant;
 			}
