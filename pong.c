@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <time.h>
 #define HEIGHT 20
-#define WIDTH 20
+#define WIDTH 40
 #define OUTPUTS 5
 #define INPUTS 4
 #define POP_SIZE 500
-#define SURVIVAL_LIMIT 1000
-#define GENERATIONS 1000
+#define SURVIVAL_LIMIT 100
+#define GENERATIONS 100
 
 struct dot {
 	int x;
@@ -134,18 +135,18 @@ void mutate(struct brain *b) {
 
 int tournament(int fitness[]) {
 	int random_brains[3];
-	for (int brain = 0; brain < 2; brain ++) {
+	for (int brain = 0; brain < 3; brain ++) {
 		random_brains[brain] = rand() % POP_SIZE;
 	}
 	int winner = 0;
-	for (int brain = 0; brain < 2; brain ++) {
+	for (int brain = 0; brain < 3; brain ++) {
 		if (fitness[random_brains[brain]] > fitness[random_brains[winner]]) {
-			winner = random_brains[brain];
+			winner = brain;
 		}
 	}
-	return winner;
+	return random_brains[winner];
 }
-int run_match(void) {
+int run_match(int render) {
 	struct dot player = {
 		0,0,	
 	};
@@ -154,6 +155,34 @@ int run_match(void) {
 	};
 	int survival_count = 0;
 	while(survival_count < SURVIVAL_LIMIT) {
+		// Render block if render bit is flipped
+		if (render) {
+			usleep(200000);
+			printf("\033[2J");
+			printf("\033[H");
+			
+			for (int row = 0; row < HEIGHT; row ++) {
+				for (int column = 0; column < WIDTH; column ++) {
+					if (row == 0 || row == HEIGHT -1) {
+						printf("#");
+					}
+					else if (column == 0 || column == WIDTH -1) {
+						printf("#");
+					}
+					else if (player.y == row && player.x == column) {
+						printf("x");
+					}
+					else if (opponent.y == row && opponent.x == column) {
+						printf("0");
+					}
+					else {
+						printf(" ");
+					}
+				}
+			printf("\n");
+			}
+		}
+
 		// Escapee gets one move
 		enum action opponent_choice = opponent_controller(player, opponent);
 		apply_action(&opponent, opponent_choice);		
@@ -184,13 +213,13 @@ int main (void) {
 		for (int i = 0; i < POP_SIZE; i++) {
 			fill_weights_biases(&population[i]);
 			active = population[i];
-			fitness[i] = run_match();
+			fitness[i] = run_match(0);
 		}
 
 		for(int g = 0; g < GENERATIONS; g++) {
 			for (int p = 0; p < POP_SIZE; p++) {
 				active = population[p];
-				fitness[p] = run_match();
+				fitness[p] = run_match(0);
 			}
 			int best = 0;
 			int average = 0;
@@ -204,16 +233,22 @@ int main (void) {
 			
 
 			struct brain champion = population[best];
-			population[0] = champion;
+			struct brain next_gen[POP_SIZE];
+			next_gen[0] = champion;
 				
 			for (int i = 1; i < POP_SIZE; i++) {
 				//struct brain mutant = champion;
 				int winner = tournament(fitness);
 				struct brain mutant = population[winner];
 				mutate(&mutant);
-				population[i] = mutant;
+				next_gen[i] = mutant;
+			}
+			for (int i = 0; i < POP_SIZE; i++) {
+				population[i] = next_gen[i];
 			}
 			printf("Average of generation %d: %d\n", g, average);
 		}
+		active = population[0];
+		int final = run_match(1);
 		return 0;
 }
